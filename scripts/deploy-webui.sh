@@ -64,26 +64,13 @@ say "Копирую шаблоны конфигураций..."
 cp docker-compose.example.yml docker-compose.yml
 cp docker/nginx/nginx.example.conf docker/nginx/nginx.conf
 
-say "Создаю/обновляю bot.json..."
-if [ ! -f bot.json ]; then
-  docker run --rm ghcr.io/thesashadev/girl-agent:latest server --print-config > bot.json
-fi
+say "Запускаю первоначальную настройку через интерактивного помощника..."
+docker compose run --rm -it girl-agent || true
 
-echo "Введите токен вашего Telegram-бота:"
-read -r TG_TOKEN
-echo "Введите ваш API ключ (OpenAI/Anthropic/ClaudeHub):"
-read -r API_KEY
-
-# Кроссплатформенный способ замены (работает и на Mac и на Linux без проблем с -i)
-sed "s/\"botToken\": \".*\"/\"botToken\": \"$TG_TOKEN\"/" bot.json > bot.json.tmp && mv bot.json.tmp bot.json
-sed "s/\"apiKey\": \".*\"/\"apiKey\": \"$API_KEY\"/" bot.json > bot.json.tmp && mv bot.json.tmp bot.json
-
-ok "Настройки сохранены в bot.json!"
-
-say "Поднимаю сервисы..."
+say "Поднимаю сервисы в фоне..."
 docker compose up -d
 
-say "Жду 3 секунды, чтобы бот успел сгенерировать токен..."
+say "Жду 3 секунды, чтобы бот успел сгенерировать токен WebUI..."
 sleep 3
 
 TOKEN=$(docker compose logs girl-agent | grep -o 'token=[a-f0-9]*' | head -n 1 | cut -d '=' -f 2)
