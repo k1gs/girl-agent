@@ -64,13 +64,21 @@ say "Копирую шаблоны конфигураций..."
 cp docker-compose.example.yml docker-compose.yml
 cp docker/nginx/nginx.example.conf docker/nginx/nginx.conf
 
-say "Создаю шаблон bot.json, если он не существует..."
+say "Создаю/обновляю bot.json..."
 if [ ! -f bot.json ]; then
   docker run --rm ghcr.io/thesashadev/girl-agent:latest server --print-config > bot.json
-  warn "Файл bot.json был создан. Обязательно отредактируйте его и укажите свой API ключ и токен бота!"
-  warn "Откройте bot.json в редакторе (например, nano bot.json)."
-  read -p "Нажмите Enter, когда закончите редактирование bot.json..."
 fi
+
+echo "Введите токен вашего Telegram-бота:"
+read -r TG_TOKEN
+echo "Введите ваш API ключ (OpenAI/Anthropic/ClaudeHub):"
+read -r API_KEY
+
+# Простая замена REPLACE_ME в json
+sed -i "s/\"botToken\": \".*\"/\"botToken\": \"$TG_TOKEN\"/" bot.json
+sed -i "s/\"apiKey\": \".*\"/\"apiKey\": \"$API_KEY\"/" bot.json
+
+ok "Настройки сохранены в bot.json!"
 
 say "Поднимаю сервисы..."
 docker compose up -d
