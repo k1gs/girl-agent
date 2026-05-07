@@ -249,6 +249,14 @@ export async function extractAgendaUpdates(
     return { created: 0, updated: 0, cancelled: 0 };
   }
 
+  // Эвристика: если сообщение очень короткое и не содержит типичных "временных" или "планирующих" слов,
+  // пропускаем вызов LLM для экономии токенов.
+  const words = incoming.trim().split(/\s+/);
+  const timeOrPlanKeywords = /завтра|сегодня|вечером|утром|днем|ночью|потом|позже|скоро|через|встреча|планы|дела|работа|учеба|соревнования|экзамен|поездка|иду|еду|буду|занят/i;
+  if (words.length <= 4 && !timeOrPlanKeywords.test(incoming)) {
+    return { created: 0, updated: 0, cancelled: 0 };
+  }
+
   const persona = (await readMd(cfg.slug, "persona.md")).slice(0, 800);
   const stateBlock = `# Стадия: ${stage.label} (${stage.description})\n# ${communicationDecisionState(communication)}\n# persona фрагмент:\n${persona}`;
   const histStr = history.slice(-8).map(m => `${m.role === "user" ? "он" : "она"}: ${m.content}`).join("\n");
