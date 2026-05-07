@@ -10,6 +10,7 @@ import { Runtime } from "./engine/runtime.js";
 import { makeLLM } from "./llm/index.js";
 import { generatePersonaPack } from "./engine/persona-gen.js";
 import { runHeadlessJsonEvents } from "./headless.js";
+import { startWebUI } from "./webui/server.js";
 import type { ProfileConfig, ClientMode, Nationality, StageId, LLMProto, PrivacyMode } from "./types.js";
 
 /**
@@ -40,6 +41,8 @@ interface ServerArgs {
   profile?: string;
   list?: boolean;
   help?: boolean;
+  webui?: boolean;
+  webuiPort?: string;
 }
 
 const SERVER_HELP = `
@@ -79,7 +82,9 @@ function parseServerArgs(argv: Record<string, unknown>): ServerArgs {
     noStart: !!argv["no-start"] || argv.start === false,
     profile: typeof argv.profile === "string" ? argv.profile : undefined,
     list: !!argv.list,
-    help: !!argv.help
+    help: !!argv.help,
+    webui: !!argv.webui,
+    webuiPort: typeof argv["webui-port"] === "string" ? argv["webui-port"] : typeof argv.webuiPort === "string" ? argv.webuiPort : undefined
   };
 }
 
@@ -164,6 +169,10 @@ async function startRuntime(cfg: ProfileConfig, args: ServerArgs): Promise<void>
   await rt.start();
 
   const wantsHeadless = !!(args.headless || args.jsonEvents);
+  if (args.webui) {
+    await startWebUI(rt, args.webuiPort ? Number(args.webuiPort) : 7777);
+  }
+
   if (wantsHeadless) {
     await runHeadlessJsonEvents(rt);
     return;

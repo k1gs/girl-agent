@@ -68,10 +68,10 @@ async function main() {
     string: [
       "profile", "mode", "token", "api-id", "api-hash", "phone", "api-preset", "base-url", "proto", "model", "api-key",
       "name", "stage", "mcp", "nationality", "tz", "vibe", "persona-notes", "communication-preset",
-      "notifications", "message-style", "initiative", "life-sharing", "privacy", "config"
+      "notifications", "message-style", "initiative", "life-sharing", "privacy", "config", "webui-port"
     ],
     boolean: [
-      "help", "list", "reset", "new", "json-events", "headless", "server",
+      "help", "list", "reset", "new", "json-events", "headless", "server", "webui",
       "print-config", "print-systemd", "print-docker", "no-start"
     ],
     alias: { h: "help" }

@@ -9,6 +9,7 @@
   "main": "dist/cli.js",
   "files": [
     "dist",
+    "src/webui/static",
     "templates",
     "README.md",
     "CHANGELOG.md",
@@ -42,6 +43,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@modelcontextprotocol/sdk": "^1.0.4",
+    "express": "^5.2.1",
     "grammy": "^1.30.0",
     "ink": "^5.0.1",
     "ink-big-text": "^2.0.0",
@@ -53,11 +55,14 @@
     "mri": "^1.2.0",
     "openai": "^4.77.0",
     "react": "^18.3.1",
-    "telegram": "^2.26.16"
+    "telegram": "^2.26.16",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.18",
+    "@types/ws": "^8.18.1",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
