@@ -40,7 +40,7 @@
 ### linux / macos / wsl — одной командой (без node на машине)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/TheSashaDev/girl-agent/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/TheSashaDev/girl-agent/master/scripts/install.sh | sh
 ```
 
 Что произойдёт:

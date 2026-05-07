@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # girl-agent — universal installer
 #
-#   curl -fsSL https://raw.githubusercontent.com/TheSashaDev/girl-agent/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/TheSashaDev/girl-agent/master/scripts/install.sh | sh
 #
 # Что делает:
 #   1. Не требует node на машине — скачивает official Node.js 22 LTS в локальный
@@ -117,7 +117,12 @@ mkdir -p "$BIN_DIR" "$DATA_DIR"
 install_docker() {
   command -v docker >/dev/null 2>&1 || die "docker не установлен. установи docker desktop / docker engine, или используй --local."
   say "тяну ${DOCKER_IMAGE} (это занимает 30-60 сек)..."
-  docker pull "$DOCKER_IMAGE" >&2 || warn "не удалось pull образ; shim всё равно поставлю — pullнётся при первом запуске"
+  if ! docker pull "$DOCKER_IMAGE" >&2; then
+    warn "не удалось pull образ (приватный пакет или нет сети)"
+    warn "переключаюсь на локальный режим (изолированная нода)..."
+    install_local
+    return
+  fi
 
   cat >"$BIN_DIR/girl-agent" <<'SHIM'
 #!/usr/bin/env sh
