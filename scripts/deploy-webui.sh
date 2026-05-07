@@ -56,7 +56,7 @@ else
   openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout docker/nginx/ssl/key.pem \
     -out docker/nginx/ssl/cert.pem \
-    -subj "/CN=$DOMAIN_OR_IP"
+    -subj "/CN=$DOMAIN_OR_IP" 2>/dev/null
   warn "Внимание: при первом входе браузер покажет предупреждение 'Небезопасное подключение'. Это нормально для самоподписанных сертификатов. Продолжите переход."
 fi
 
@@ -74,9 +74,9 @@ read -r TG_TOKEN
 echo "Введите ваш API ключ (OpenAI/Anthropic/ClaudeHub):"
 read -r API_KEY
 
-# Простая замена REPLACE_ME в json
-sed -i "s/\"botToken\": \".*\"/\"botToken\": \"$TG_TOKEN\"/" bot.json
-sed -i "s/\"apiKey\": \".*\"/\"apiKey\": \"$API_KEY\"/" bot.json
+# Кроссплатформенный способ замены (работает и на Mac и на Linux без проблем с -i)
+sed "s/\"botToken\": \".*\"/\"botToken\": \"$TG_TOKEN\"/" bot.json > bot.json.tmp && mv bot.json.tmp bot.json
+sed "s/\"apiKey\": \".*\"/\"apiKey\": \"$API_KEY\"/" bot.json > bot.json.tmp && mv bot.json.tmp bot.json
 
 ok "Настройки сохранены в bot.json!"
 
