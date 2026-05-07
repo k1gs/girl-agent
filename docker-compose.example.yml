@@ -1,9 +1,9 @@
-# Example docker-compose.yml for headless deployment.
+# Example docker-compose.yml for headless deployment with WebUI behind Nginx.
 # Copy to docker-compose.yml and edit, or run directly:
 #   docker compose -f docker-compose.example.yml up -d
 #
 # For first-time setup (interactive ink wizard):
-#   docker compose run --rm girl-agent
+#   docker compose run --rm -it girl-agent
 # Then once a profile exists, switch to detached mode:
 #   docker compose up -d
 version: "3.9"
@@ -13,23 +13,30 @@ services:
     image: ghcr.io/thesashadev/girl-agent:latest
     container_name: girl-agent
     restart: unless-stopped
-    # interactive default (ink TUI); switch to "server --config /config/bot.json --headless"
-    # if you want pure logs and a json config.
-    command: ["server", "--config", "/config/bot.json", "--headless"]
+    # We add --webui to start the internal express webui server on port 7777
+    command: ["server", "--config", "/config/bot.json", "--headless", "--webui"]
     environment:
       GIRL_AGENT_DATA: /data
-      # alternatively, drive everything from env vars (no /config/bot.json needed):
-      # GIRL_AGENT_MODE: bot
-      # GIRL_AGENT_TOKEN: ${TG_BOT_TOKEN}
-      # GIRL_AGENT_API_PRESET: claudehub
-      # GIRL_AGENT_API_KEY: ${LLM_API_KEY}
-      # GIRL_AGENT_NAME: Аня
-      # GIRL_AGENT_AGE: "22"
     volumes:
       - girl-agent-data:/data
       - ./bot.json:/config/bot.json:ro
+    expose:
+      - "7777"
     # to peek at logs:
     #   docker compose logs -f girl-agent
+
+  nginx:
+    image: nginx:alpine
+    container_name: girl-agent-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - girl-agent
 
 volumes:
   girl-agent-data:
