@@ -180,8 +180,12 @@ install_termux() {
   say "ставлю @thesashadev/girl-agent@${PKG_VERSION} в ${PREFIX}/lib..."
   mkdir -p "$PREFIX/lib"
 
-  "$NODE" "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --silent "@thesashadev/girl-agent@${PKG_VERSION}" \
-    || die "npm install не удался"
+  if ! "$NODE" "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
+    warn "Возможные причины ошибки в Termux:"
+    warn "1. Нехватка памяти (OOM) — закройте другие приложения."
+    warn "2. Отсутствие утилит сборки — попробуйте: pkg install python make clang"
+    die "npm install не удался. Посмотрите ошибки выше."
+  fi
 
   cat >"$BIN_DIR/girl-agent" <<EOF
 #!/usr/bin/env sh
