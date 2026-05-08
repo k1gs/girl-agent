@@ -185,6 +185,8 @@ install_termux() {
   say "ставлю @thesashadev/girl-agent@${PKG_VERSION} в ${PREFIX}/lib..."
   mkdir -p "$PREFIX/lib"
 
+  export npm_config_android_ndk_path="${PREFIX:-/data/data/com.termux/files/usr}"
+
   if ! "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
     warn "Возможные причины ошибки в Termux:"
     warn "1. Нехватка памяти (OOM) — закройте тяжелые приложения в фоне Android."
