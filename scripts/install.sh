@@ -177,13 +177,18 @@ install_termux() {
     fi
   fi
 
+  say "ставлю утилиты сборки (python, make, clang) для нативных модулей npm..."
+  if command -v pkg >/dev/null 2>&1; then
+    pkg install -y python make clang || warn "не удалось установить python/make/clang, сборка нативных модулей может упасть."
+  fi
+
   say "ставлю @thesashadev/girl-agent@${PKG_VERSION} в ${PREFIX}/lib..."
   mkdir -p "$PREFIX/lib"
 
-  if ! "$NODE" "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
+  if ! "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
     warn "Возможные причины ошибки в Termux:"
-    warn "1. Нехватка памяти (OOM) — закройте другие приложения."
-    warn "2. Отсутствие утилит сборки — попробуйте: pkg install python make clang"
+    warn "1. Нехватка памяти (OOM) — закройте тяжелые приложения в фоне Android."
+    warn "2. Отсутствие нужных библиотек. Читайте ошибку выше (обычно node-gyp rebuild failed)."
     die "npm install не удался. Посмотрите ошибки выше."
   fi
 
