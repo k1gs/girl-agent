@@ -19,7 +19,7 @@ set -eu
 
 # -------- pretty output --------
 _color() { if [ -t 2 ] && command -v tput >/dev/null 2>&1; then printf "%s" "$(tput "$@")"; fi; }
-B=$(_color bold); D=$(_color sgr0); G=$(_color setaf 2); R=$(_color setaf 1); Y=$(_color setaf 3)
+B=$(_color bold); D=$(_color sgr0); G=$(_color setaf 2); R=$(_color setaf 1); Y=$(_color setaf 3); BLUE=$(_color setaf 4)
 say() { printf "%s[girl-agent]%s %s\n" "$B" "$D" "$1" >&2; }
 ok()  { printf "%s[girl-agent]%s %s%s%s\n" "$B" "$D" "$G" "$1" "$D" >&2; }
 warn(){ printf "%s[girl-agent]%s %s%s%s\n" "$B" "$D" "$Y" "$1" "$D" >&2; }
@@ -164,7 +164,7 @@ install_termux() {
     if command -v pkg >/dev/null 2>&1; then
       # Игнорируем ошибку update (например, если зеркало недоступно), но пытаемся установить nodejs
       pkg update -y || warn "pkg update завершился с ошибкой, продолжаю установку..."
-      pkg install -y nodejs || warn "pkg install nodejs завершился с ошибкой"
+      pkg install -y nodejs-lts || warn "pkg install nodejs-lts завершился с ошибкой"
     else
       warn "команда pkg не найдена, не могу установить nodejs"
     fi
@@ -177,15 +177,21 @@ install_termux() {
     fi
   fi
 
-  say "ставлю утилиты сборки (python, make, clang) для нативных модулей npm..."
+  say "ставлю утилиты сборки (python, make, clang, binutils) для нативных модулей npm..."
   if command -v pkg >/dev/null 2>&1; then
-    pkg install -y python make clang || warn "не удалось установить python/make/clang, сборка нативных модулей может упасть."
+    pkg install -y python make clang binutils || warn "не удалось установить инструменты сборки, установка может упасть."
   fi
+
+  say "ставлю PM2 для фоновой работы..."
+  "$NPM" install -g pm2 --loglevel error || warn "не удалось установить PM2 глобально."
+
+  say "активирую wake-lock (предотвращение сна)..."
+  termux-wake-lock || warn "не удалось активировать wake-lock."
 
   say "ставлю @thesashadev/girl-agent@${PKG_VERSION} в ${PREFIX}/lib..."
   mkdir -p "$PREFIX/lib"
   
-  if ! "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
+  if ! "$NPM" install --prefix "$PREFIX/lib" --no-audit --no-fund --no-optional --ignore-scripts --loglevel error "@thesashadev/girl-agent@${PKG_VERSION}"; then
     warn "Возможные причины ошибки в Termux:"
     warn "1. Нехватка памяти (OOM) — закройте тяжелые приложения в фоне Android."
     warn "2. Отсутствие нужных библиотек. Читайте ошибку выше (обычно node-gyp rebuild failed)."
@@ -271,6 +277,12 @@ case ":$PATH:" in
       [ -f "$HOME/.zshrc" ] && RC="$HOME/.zshrc"
       [ -z "$RC" ] && [ -f "$HOME/.bashrc" ] && RC="$HOME/.bashrc"
       [ -z "$RC" ] && [ -f "$HOME/.profile" ] && RC="$HOME/.profile"
+      if [ -z "$RC" ] && [ -n "${TERMUX_VERSION:-}" ]; then
+        RC="$HOME/.bashrc"
+        touch "$RC"
+        ok "создал $RC для Termux"
+      fi
+
       if [ -n "$RC" ]; then
         if ! grep -qF ".local/bin" "$RC" 2>/dev/null; then
           printf '\n# added by girl-agent install.sh\nexport PATH="$HOME/.local/bin:$PATH"\n' >>"$RC"
@@ -294,6 +306,20 @@ cat >&2 <<EOF
   ${B}girl-agent server --help${D}      # серверный режим (config-файл / env vars)
   ${B}girl-agent server --print-config > bot.json${D}
   ${B}girl-agent server --config bot.json --headless${D}
+EOF
+
+if [ "$MODE" = "termux" ]; then
+cat >&2 <<EOF
+
+${B}${Y}Termux Hosting Tips:${D}
+  - Чтобы бот не засыпал: ${G}termux-wake-lock${D} (уже активно)
+  - Для фоновой работы используй PM2:
+      ${BLUE}pm2 start girl-agent -- server --headless --profile=ВАШ_ПРОФИЛЬ${D}
+  - В настройках Android ${Y}отключи оптимизацию батареи${D} для Termux.
+EOF
+fi
+
+cat >&2 <<EOF
 
 профили хранятся в: ${DATA_DIR}
 обновить: запусти install.sh ещё раз
